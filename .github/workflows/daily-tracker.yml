@@ -1,0 +1,34 @@
+name: RX 9070 XT Twice-Daily Tracker
+
+on:
+  schedule:
+    # 08:00 Uhr morgens (deutsche Zeit UTC+1 = 07:00 UTC)
+    - cron: '0 7 * * *'
+    # 18:00 Uhr abends (deutsche Zeit UTC+1 = 17:00 UTC)
+    - cron: '0 17 * * *'
+  workflow_dispatch:  # Manueller Start
+
+jobs:
+  track-prices:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install Dependencies
+      run: |
+        pip install requests beautifulsoup4
+        
+    - name: Run Bot
+      env:
+        GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
+        GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        BESTENLISTE_URL: ${{ secrets.BESTENLISTE_URL }}
+      run: |
+        python bot_code/gpu_bot_complete.py
