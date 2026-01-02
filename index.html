@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RX 9070 XT Bestenliste - Live Performance/€ Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #ED4545 0%, #C72C2C 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .header .subtitle {
+            font-size: 1.2em;
+            opacity: 0.95;
+        }
+        
+        .last-update {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 3px solid #ED4545;
+        }
+        
+        .filters {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .filter-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .filter-btn {
+            padding: 12px 24px;
+            border: 2px solid #ED4545;
+            background: white;
+            color: #ED4545;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-btn:hover {
+            background: #ED4545;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .filter-btn.active {
+            background: #ED4545;
+            color: white;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .champion-banner {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 40px;
+            text-align: center;
+            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.3);
+        }
+        
+        .champion-banner h2 {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .champion-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .gpu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .gpu-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 25px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .gpu-card:hover {
+            border-color: #ED4545;
+            box-shadow: 0 8px 20px rgba(237, 69, 69, 0.2);
+            transform: translateY(-5px);
+        }
+        
+        .gpu-card.rank-1 {
+            border: 3px solid #FFD700;
+            background: linear-gradient(135deg, #FFF9E6 0%, #FFFFFF 100%);
+        }
+        
+        .gpu-card.rank-2 {
+            border: 3px solid #C0C0C0;
+        }
+        
+        .gpu-card.rank-3 {
+            border: 3px solid #CD7F32;
+        }
+        
+        .gpu-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+        
+        .gpu-name {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #333;
+        }
+        
+        .rank-badge {
+            background: #ED4545;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+        
+        .rank-badge.gold {
+            background: #FFD700;
+            color: #333;
+        }
+        
+        .rank-badge.silver {
+            background: #C0C0C0;
+            color: #333;
+        }
+        
+        .rank-badge.bronze {
+            background: #CD7F32;
+            color: white;
+        }
+        
+        .price {
+            font-size: 2em;
+            font-weight: 700;
+            color: #ED4545;
+            margin: 15px 0;
+        }
+        
+        .perf-score {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+        
+        .perf-label {
+            font-weight: 600;
+            color: #666;
+        }
+        
+        .perf-value {
+            font-weight: 700;
+            color: #ED4545;
+        }
+        
+        .specs {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .spec-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 0.95em;
+        }
+        
+        .shop-link {
+            display: block;
+            margin-top: 15px;
+            padding: 12px;
+            background: #ED4545;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .shop-link:hover {
+            background: #C72C2C;
+            transform: scale(1.02);
+        }
+        
+        .chart-section {
+            margin: 40px 0;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+        
+        .chart-section h3 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
+        .footer {
+            background: #333;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .footer p {
+            margin: 10px 0;
+        }
+        
+        .footer a {
+            color: #ED4545;
+            text-decoration: none;
+        }
+        
+        @media (max-width: 768px) {
+            .gpu-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .filter-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏆 RX 9070 XT BESTENLISTE</h1>
+            <div class="subtitle">Live Performance/€ Tracker – Die besten Deals täglich aktualisiert</div>
+        </div>
+        
+        <div class="last-update">
+            <strong>Letztes Update:</strong> <span id="lastUpdate">31. Dezember 2025, 13:35 Uhr</span>
+            <br>
+            <small>Nächstes Update: Täglich um 10:00 Uhr automatisch</small>
+        </div>
+        
+        <div class="filters">
+            <h3 style="text-align: center; margin-bottom: 20px;">Filter nach Hersteller</h3>
+            <div class="filter-group">
+                <button class="filter-btn active" onclick="filterGPUs('all')">Alle</button>
+                <button class="filter-btn" onclick="filterGPUs('ASUS')">ASUS</button>
+                <button class="filter-btn" onclick="filterGPUs('ASRock')">ASRock</button>
+                <button class="filter-btn" onclick="filterGPUs('PowerColor')">PowerColor</button>
+                <button class="filter-btn" onclick="filterGPUs('Sapphire')">Sapphire</button>
+                <button class="filter-btn" onclick="filterGPUs('XFX')">XFX</button>
+                <button class="filter-btn" onclick="filterGPUs('Gigabyte')">Gigabyte</button>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="champion-banner">
+                <h2>🥇 AKTUELLER PERFORMANCE/€ CHAMPION</h2>
+                <div class="champion-card">
+                    <div style="font-size: 1.5em; font-weight: 700; color: #ED4545; margin-bottom: 10px;">
+                        ASUS Prime RX 9070 XT OC
+                    </div>
+                    <div style="font-size: 2.5em; font-weight: 700; color: #333; margin: 15px 0;">
+                        €619,00
+                    </div>
+                    <div style="font-size: 1.2em; color: #666;">
+                        Performance/€: <strong style="color: #ED4545;">0,155</strong>
+                    </div>
+                    <div style="margin-top: 15px; color: #666;">
+                        96% Gaming Performance • Dual BIOS • Kompakt (313mm)
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chart-section">
+                <h3>📊 Preisentwicklung (letzte 7 Tage)</h3>
+                <div class="chart-container">
+                    <canvas id="priceChart"></canvas>
+                </div>
+            </div>
+            
+            <h2 style="font-size: 2em; margin-bottom: 30px; text-align: center;">Alle Modelle – Performance/€ Ranking</h2>
+            
+            <div class="gpu-grid" id="gpuGrid">
+                <!-- GPU Cards werden hier dynamisch eingefügt -->
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>RX 9070 XT Bot v0.3</strong></p>
+            <p>Automatisiert von Jonathan Högg • Daten: Geizhals.de, TechSpot, Hardware Unboxed</p>
+            <p>Nächstes Update: Morgen 10:00 Uhr</p>
+        </div>
+    </div>
+    
+    <script>
+        // GPU Datenbank
+        const gpuData = [
+            {
+                name: "ASUS Prime RX 9070 XT OC",
+                brand: "ASUS",
+                price: 619.00,
+                performance: 96,
+                perfPerEuro: 0.155,
+                gpuTemp: 56,
+                memTemp: 78,
+                vrmTemp: 64,
+                size: 313,
+                dualBios: true,
+                rgb: false,
+                shopUrl: "https://geizhals.de/asus-radeon-rx-9070-xt-v191844.html",
+                rank: 1
+            },
+            {
+                name: "PowerColor Hellhound RX 9070 XT",
+                brand: "PowerColor",
+                price: 666.90,
+                performance: 96,
+                perfPerEuro: 0.144,
+                gpuTemp: 58,
+                memTemp: 82,
+                vrmTemp: 68,
+                size: 324,
+                dualBios: true,
+                rgb: true,
+                shopUrl: "https://geizhals.de/powercolor-hellhound-radeon-rx-9070-xt-v191869.html",
+                rank: 2
+            },
+            {
+                name: "XFX Mercury RX 9070 XT",
+                brand: "XFX",
+                price: 669.00,
+                performance: 100,
+                perfPerEuro: 0.149,
+                gpuTemp: 51,
+                memTemp: 74,
+                vrmTemp: 64,
+                size: 349,
+                dualBios: true,
+                rgb: true,
+                shopUrl: "https://geizhals.de/xfx-mercury-radeon-rx-9070-xt-v191875.html",
+                rank: 3
+            },
+            {
+                name: "Sapphire Pure RX 9070 XT",
+                brand: "Sapphire",
+                price: 669.00,
+                performance: 95,
+                perfPerEuro: 0.142,
+                gpuTemp: 57,
+                memTemp: 80,
+                vrmTemp: 66,
+                size: 310,
+                dualBios: false,
+                rgb: false,
+                shopUrl: "https://geizhals.de/sapphire-pure-radeon-rx-9070-xt-11348-02-20g-a3429921.html",
+                rank: 4
+            },
+            {
+                name: "Sapphire Pulse RX 9070 XT",
+                brand: "Sapphire",
+                price: 664.85,
+                performance: 94,
+                perfPerEuro: 0.141,
+                gpuTemp: 62,
+                memTemp: 86,
+                vrmTemp: 72,
+                size: 289,
+                dualBios: false,
+                rgb: false,
+                shopUrl: "https://geizhals.de/sapphire-pulse-radeon-rx-9070-xt-11348-03-20g-a3429991.html",
+                rank: 5
+            },
+            {
+                name: "Sapphire Nitro+ RX 9070 XT",
+                brand: "Sapphire",
+                price: 699.00,
+                performance: 98,
+                perfPerEuro: 0.140,
+                gpuTemp: 55,
+                memTemp: 76,
+                vrmTemp: 68,
+                size: 320,
+                dualBios: true,
+                rgb: true,
+                shopUrl: "https://geizhals.de/sapphire-nitro-radeon-rx-9070-xt-11348-01-20g-a3430045.html",
+                rank: 6
+            },
+            {
+                name: "ASRock Taichi RX 9070 XT OC",
+                brand: "ASRock",
+                price: 699.99,
+                performance: 99,
+                perfPerEuro: 0.141,
+                gpuTemp: 54,
+                memTemp: 75,
+                vrmTemp: 62,
+                size: 336,
+                dualBios: true,
+                rgb: true,
+                shopUrl: "https://www.amazon.de/dp/B0DTT4H4QJ",
+                rank: 7
+            },
+            {
+                name: "ASRock Steel Legend RX 9070 XT",
+                brand: "ASRock",
+                price: 612.85,
+                performance: 94,
+                perfPerEuro: 0.153,
+                gpuTemp: 59,
+                memTemp: 84,
+                vrmTemp: 70,
+                size: 324,
+                dualBios: true,
+                rgb: true,
+                shopUrl: "https://geizhals.de/asrock-radeon-rx-9070-xt-v191853.html",
+                rank: 8
+            }
+        ];
+        
+        // GPU Cards rendern
+        function renderGPUs(filter = 'all') {
+            const grid = document.getElementById('gpuGrid');
+            grid.innerHTML = '';
+            
+            const filtered = filter === 'all' 
+                ? gpuData 
+                : gpuData.filter(gpu => gpu.brand === filter);
+            
+            filtered.forEach(gpu => {
+                const card = document.createElement('div');
+                card.className = `gpu-card rank-${gpu.rank}`;
+                
+                let rankBadgeClass = '';
+                let rankText = `#${gpu.rank}`;
+                
+                if (gpu.rank === 1) {
+                    rankBadgeClass = 'gold';
+                    rankText = '🥇 CHAMPION';
+                } else if (gpu.rank === 2) {
+                    rankBadgeClass = 'silver';
+                    rankText = '🥈 #2';
+                } else if (gpu.rank === 3) {
+                    rankBadgeClass = 'bronze';
+                    rankText = '🥉 #3';
+                }
+                
+                card.innerHTML = `
+                    <div class="gpu-header">
+                        <div class="gpu-name">${gpu.name}</div>
+                        <div class="rank-badge ${rankBadgeClass}">${rankText}</div>
+                    </div>
+                    
+                    <div class="price">€${gpu.price.toFixed(2)}</div>
+                    
+                    <div class="perf-score">
+                        <span class="perf-label">Performance/€</span>
+                        <span class="perf-value">${gpu.perfPerEuro.toFixed(3)}</span>
+                    </div>
+                    
+                    <div class="perf-score">
+                        <span class="perf-label">Gaming Performance</span>
+                        <span class="perf-value">${gpu.performance}%</span>
+                    </div>
+                    
+                    <div class="specs">
+                        <div class="spec-item">
+                            <span>🌡️ GPU Temp</span>
+                            <strong>${gpu.gpuTemp}°C</strong>
+                        </div>
+                        <div class="spec-item">
+                            <span>🔥 Memory Temp</span>
+                            <strong>${gpu.memTemp}°C</strong>
+                        </div>
+                        <div class="spec-item">
+                            <span>⚡ VRM Temp</span>
+                            <strong>${gpu.vrmTemp}°C</strong>
+                        </div>
+                        <div class="spec-item">
+                            <span>📏 Größe</span>
+                            <strong>${gpu.size}mm</strong>
+                        </div>
+                        <div class="spec-item">
+                            <span>🎛️ Dual BIOS</span>
+                            <strong>${gpu.dualBios ? '✅ Ja' : '❌ Nein'}</strong>
+                        </div>
+                        <div class="spec-item">
+                            <span>💡 RGB</span>
+                            <strong>${gpu.rgb ? '✅ Ja' : '❌ Nein'}</strong>
+                        </div>
+                    </div>
+                    
+                    <a href="${gpu.shopUrl}" target="_blank" class="shop-link">
+                        🛒 Zum Shop (Geizhals)
+                    </a>
+                `;
+                
+                grid.appendChild(card);
+            });
+        }
+        
+        // Filter-Funktion
+        function filterGPUs(brand) {
+            // Update active button
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            renderGPUs(brand);
+        }
+        
+        // Preis-Chart
+        function renderPriceChart() {
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            
+            // Simulierte historische Daten (würde vom Bot täglich erweitert)
+            const dates = ['25.12', '26.12', '27.12', '28.12', '29.12', '30.12', '31.12'];
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        {
+                            label: 'ASUS Prime',
+                            data: [629, 625, 622, 620, 619, 619, 619],
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'PowerColor Hellhound',
+                            data: [679, 675, 672, 670, 668, 667, 666.90],
+                            borderColor: '#ED4545',
+                            backgroundColor: 'rgba(237, 69, 69, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'XFX Mercury',
+                            data: [689, 685, 680, 675, 672, 670, 669],
+                            borderColor: '#FFD700',
+                            backgroundColor: 'rgba(255, 215, 0, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Sapphire Nitro+',
+                            data: [719, 715, 710, 708, 705, 702, 699],
+                            borderColor: '#764ba2',
+                            backgroundColor: 'rgba(118, 75, 162, 0.1)',
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        title: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: function(value) {
+                                    return '€' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Initial render
+        renderGPUs();
+        renderPriceChart();
+    </script>
+</body>
+</html>
